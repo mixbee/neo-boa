@@ -109,9 +109,18 @@ pip install -r requirements.txt
 The compiler may be used like in the following example:
 
 ```
-from boa.compiler import Compiler
+   compiler = Compiler.load("./mytest/Hello.py")
+    # compiler code
+    result = compiler.write()
+    print("result: ", result)
 
-Compiler.load_and_save('path/to/your/file.py')
+    # compiler abi
+    result = compiler.write_abi()
+    print("result: ", result)
+
+    # generate avm, debug, abi file
+    # result = Compiler.load_and_save("./mytest/Hello.py")
+
 ```
 
 

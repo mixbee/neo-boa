@@ -10,10 +10,20 @@ from boa.compiler import Compiler
 # bytes = Compiler.load_and_save('./print.py')
 # bytes = Compiler.load_and_save('./base.py')
 # bytes = Compiler.load_and_save('./NEP5.py')
-bytes = Compiler.load_and_save('./domain.py')
 
 
+# bytes = Compiler.load_and_save('./domain.py')
 
 
+if __name__ == '__main__':
+    compiler = Compiler.load("./mytest/Hello.py")
+    # compiler code
+    result = compiler.write()
+    print("result: ", result)
 
-print(bytes.hex())
+    # compiler abi
+    result = compiler.write_abi()
+    print("result: ", result)
+
+    # generate avm, debug, abi file
+    # result = Compiler.load_and_save("./mytest/Hello.py")

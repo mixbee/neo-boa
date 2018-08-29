@@ -1,4 +1,5 @@
-from boa.interop.Neo.Runtime import Log, Notify
+from boa.interop.Neo.Runtime import Log
+
 
 def Main(operation, args):
     if operation == 'Hello':
@@ -10,5 +11,4 @@ def Main(operation, args):
 
 def Hello(msg):
     Log(msg)
-    Notify(msg)
     return True

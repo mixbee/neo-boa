@@ -14,6 +14,7 @@ import sys
 import hashlib
 from boa import __version__
 import json
+import ast
 
 
 class Module(object):
@@ -123,7 +124,6 @@ class Module(object):
         :rtype: ``boa.code.method.Method``
         """
 
-        #        print("METHODS FOR MODULE: %s " % self.path)
         for m in self.methods:
             if m.full_name == method_name or m.name == method_name:
                 return m
@@ -136,7 +136,7 @@ class Module(object):
                 return True
         return False
 
-    def __init__(self, path: str, module_name='', to_import=['*']):
+    def      __init__(self, path: str, module_name='', to_import=['*']):
 
         self.path = path
         self.to_import = to_import
@@ -421,3 +421,65 @@ class Module(object):
         data['files'] = [{'id': val, 'url': os.path.abspath(key)} for key, val in files.items()]
         json_data = json.dumps(data, indent=4)
         return json_data
+
+    def write_abi(self, data_hex):
+        source = open(os.path.abspath(self.path), "r").read()
+        json_data = self.generate_abi_json(source, data_hex)
+        return json_data
+
+
+    def export_abi(self, path, output_path, dataHex):
+        """
+        this method is used to generate a abi map
+        """
+        source = open(path, "r").read()
+        json_data = self.generate_abi_json(source, dataHex)
+        mapfilename = output_path.replace('.avm', '.abi.json')
+        with open(mapfilename, 'w+') as out_file:
+            out_file.write(json_data)
+
+
+    def generate_abi_json(self, source, dataHex):
+        """
+        {
+            "hash": "",
+            "entrypoint": "Main",
+            "functions": [
+                {"name": "Main", "parameters": [{"name":"operation", "type": "String"}, {"name": "args", "type": "Array"}], "returntype":""}
+            ],
+            "events": []
+        }
+
+        """
+
+        tree = ast.parse(source)
+        data = {}
+        functions = []
+        events = []
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                functionMap = {}
+                argsList = []
+                for item in node.args.args:
+                    argsMap = {}
+                    argsMap["name"] = item.arg
+                    argsMap["type"] = ""
+                    argsList.append(argsMap)
+
+                print()
+                functionMap['name'] = node.name
+                functionMap["parameters"] = argsList
+                functionMap["returntype"] = ""
+                functions.append(functionMap)
+
+        sha256 = hashlib.sha256(bytes.fromhex(dataHex)).digest()
+        h = hashlib.new('ripemd160')
+        h.update(sha256)
+        hexstr = h.digest()
+        data["hash"] = hexstr[::-1].hex()
+        data["events"] = events
+        data["functions"] = functions
+        json_data = json.dumps(data, indent=4)
+        return json_data
+

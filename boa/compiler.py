@@ -28,6 +28,8 @@ class Compiler(object):
 
     entry_module = None
 
+    compiled_data = None
+
     @staticmethod
     def instance():
         """
@@ -58,8 +60,10 @@ class Compiler(object):
         :param data: a byte string of data to write to disk
         :param path: the path to write the file to
         """
+        import binascii
 
-        with open(path, 'wb+') as out_file:
+        with open(path, 'w+') as out_file:
+            # out_file.write(binascii.unhexlify(data))
             out_file.write(data)
 
     def write(self):
@@ -69,10 +73,18 @@ class Compiler(object):
         :return: the compiled Python program as a byte string
         :rtype: bytes
         """
+        if self.compiled_data is None:
+            out_bytes = bytes(self.entry_module.write())
+            # module.to_s()
+            self.compiled_data = out_bytes.hex()
+        return self.compiled_data
 
-        out_bytes = bytes(self.entry_module.write())
-#        module.to_s()
-        return out_bytes
+
+    def write_abi(self):
+        if self.compiled_data is not None:
+            return self.entry_module.write_abi(self.compiled_data)
+        return None
+
 
     @staticmethod
     def load_and_save(path, output_path=None):
@@ -92,7 +104,7 @@ class Compiler(object):
 
             Compiler.load_and_save('path/to/your/file.py')
         """
-
+        originPath = path
         compiler = Compiler.load(os.path.abspath(path))
         data = compiler.write()
         if output_path is None:
@@ -103,6 +115,7 @@ class Compiler(object):
 
         Compiler.write_file(data, output_path)
         compiler.entry_module.export_debug(output_path)
+        compiler.entry_module.export_abi(os.path.abspath(originPath), output_path, data)
 
         return data
 
